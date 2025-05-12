@@ -1,0 +1,7 @@
+.env
+.venv
+venv
+.idea
+.ipynb_checkpoints
+.vscode
+.DS_Store
