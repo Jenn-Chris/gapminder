@@ -72,7 +72,7 @@ def load_and_process_data():
     gni_tidy["year"] = pd.to_numeric(gni_tidy["year"], errors='coerce')
     
     # THE KEY FIX: Parse the formatted numbers
-    st.write("🔧 **Parsing formatted numbers...**")
+    st.write(" **Parsing formatted numbers...**")
     
     # Parse population numbers (3.28M, 407k, etc.)
     pop_tidy["population"] = pop_tidy["population"].apply(parse_number)
