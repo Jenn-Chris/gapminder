@@ -38,12 +38,20 @@ def parse_number(value):
 
 @st.cache_data
 def load_and_process_data():
-    # Load files
-    population_df = pd.read_csv("app/data/pop.csv")
-    life_expectancy_df = pd.read_csv("app/data/lex.csv")
-    gni_df = pd.read_csv("app/data/ny_gnp.csv")
+    # Load files (paths work both locally and in Docker)
+    import os
     
-    st.write(" **Data loading info:**")
+    # Check if running in Docker (where files are directly in /app/data)
+    if os.path.exists("data/pop.csv"):
+        data_path = "data/"
+    else:
+        data_path = "app/data/"
+    
+    population_df = pd.read_csv(f"{data_path}pop.csv")
+    life_expectancy_df = pd.read_csv(f"{data_path}lex.csv")
+    gni_df = pd.read_csv(f"{data_path}ny_gnp.csv")
+    
+    st.write("**Data loading info:**")
     st.write(f"Population: {population_df.shape[0]} countries, {population_df.shape[1]-1} years")
     st.write(f"Life Expectancy: {life_expectancy_df.shape[0]} countries, {life_expectancy_df.shape[1]-1} years")
     st.write(f"GNI: {gni_df.shape[0]} countries, {gni_df.shape[1]-1} years")
@@ -64,7 +72,7 @@ def load_and_process_data():
     gni_tidy["year"] = pd.to_numeric(gni_tidy["year"], errors='coerce')
     
     # THE KEY FIX: Parse the formatted numbers
-    st.write("**Parsing formatted numbers...**")
+    st.write("🔧 **Parsing formatted numbers...**")
     
     # Parse population numbers (3.28M, 407k, etc.)
     pop_tidy["population"] = pop_tidy["population"].apply(parse_number)
@@ -107,7 +115,7 @@ def load_and_process_data():
     # Convert year back to int
     final_df["year"] = final_df["year"].astype(int)
     
-    st.write(f" **Final dataset:** {len(final_df):,} records, {final_df['country'].nunique()} countries, years {final_df['year'].min()}-{final_df['year'].max()}")
+    st.write(f"**Final dataset:** {len(final_df):,} records, {final_df['country'].nunique()} countries, years {final_df['year'].min()}-{final_df['year'].max()}")
     
     return final_df
 
@@ -115,7 +123,7 @@ def load_and_process_data():
 data = load_and_process_data()
 
 if len(data) == 0:
-    st.error(" No data available after processing")
+    st.error("No data available after processing!")
     st.stop()
 
 # Get available years and countries
@@ -123,11 +131,11 @@ years = sorted(data["year"].unique())
 countries = sorted(data["country"].unique())
 
 # Sidebar controls
-st.sidebar.header("Controls")
+st.sidebar.header(" Controls")
 
 # Year slider
 selected_year = st.sidebar.slider(
-    " Select Year",
+    "Select Year",
     min_value=min(years),
     max_value=max(years),
     value=max(years),
@@ -147,7 +155,7 @@ if not available_major_countries:
     available_major_countries = countries[:10]
 
 selected_countries = st.sidebar.multiselect(
-    " Select Countries",
+    "Select Countries",
     options=countries,
     default=available_major_countries[:8],
     help="Select countries to display on the chart"
@@ -186,7 +194,7 @@ if selected_countries:
             },
             log_x=True,
             size_max=60,
-            title=f"Life Expectancy vs Income Per Person - {selected_year}",
+            title=f" Life Expectancy vs Income Per Person - {selected_year}",
             labels={
                 "gni_per_capita": "Income per person (GDP per capita, PPP$ inflation-adjusted)",
                 "life_expectancy": "Life expectancy (years)"
@@ -218,7 +226,7 @@ if selected_countries:
         
         st.plotly_chart(fig, use_container_width=True)
         
-        st.write(f" Showing **{len(filtered_data)} countries** for **{selected_year}**")
+        st.write(f"Showing **{len(filtered_data)} countries** for **{selected_year}**")
         
         # Show data table
         if st.checkbox(" Show data table"):
@@ -235,7 +243,7 @@ else:
 
 # Animation
 st.sidebar.markdown("---")
-st.sidebar.subheader("Animation")
+st.sidebar.subheader(" Animation")
 
 if selected_countries:
     animation_speed = st.sidebar.slider("⚡ Speed (seconds per year)", 0.1, 2.0, 0.5, 0.1)
@@ -264,7 +272,7 @@ if selected_countries:
                     hover_name="country",
                     log_x=True,
                     size_max=60,
-                    title=f"Life Expectancy vs Income Per Person - {year}"
+                    title=f" Life Expectancy vs Income Per Person - {year}"
                 )
                 
                 fig.update_xaxes(range=[np.log10(300), np.log10(max_gni * 1.1)])
@@ -276,10 +284,10 @@ if selected_countries:
             time.sleep(animation_speed)
         
         progress_bar.empty()
-        st.success(" Animation complete!")
+        st.success("Animation complete!")
 
 # Show all countries
-with st.expander("All Available Countries"):
+with st.expander(" All Available Countries"):
     cols = st.columns(4)
     for i, country in enumerate(countries):
         cols[i % 4].write(f"• {country}")
